@@ -3,4 +3,6 @@
 
 ###导入
 
-implementation 'com.gkh.scview:scview:1.0.0'
+```
+ implementation 'com.gkh.scview:scview:1.0.0'
+ ```
