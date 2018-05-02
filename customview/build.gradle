@@ -1,0 +1,64 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.novoda.bintray-release'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.novoda:bintray-release:0.8.0'
+    }
+
+    //有中文注释加上这些
+    tasks.withType(Javadoc) {
+        options{ encoding "UTF-8"
+            charSet 'UTF-8'
+            links "http://docs.oracle.com/javase/7/docs/api"
+        }
+    }
+}
+
+android {
+    compileSdkVersion 27
+
+
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 27
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+}
+
+//推荐放在module的gradle依赖文件的最后面
+publish {
+    repoName = 'CustomView'//不指明，默认是上传到maven
+    //userOrg这个是用户的组织，我们创建的是个人帐号，也就是我们的用户名（后续会介绍，必须一致，改成你自己的bintrayName）
+    userOrg = 'guokaihua'
+    //我们的组id 类比'com.github.bumptech.glide:glide:3.7.0' 中的 com.github.bumptech.glide 这一部分
+    groupId = 'com.gkh.scview'
+    //原型id 类比'com.github.bumptech.glide:glide:3.7.0' 中的glide这一部分
+    artifactId = 'scview'
+    //版本号
+    publishVersion = '1.0.0'
+    //描述，大致介绍自己的类库
+    desc = 'custom stock linkage view'
+    //网址，可以写自己的github项目页面等
+    website = 'https://github.com/guokaihua/StockCustomView'
+}
