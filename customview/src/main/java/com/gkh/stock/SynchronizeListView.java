@@ -13,23 +13,21 @@ import java.util.List;
  * @author guokaihua
  */
 public class SynchronizeListView extends ListView implements AbsListView.OnScrollListener{
-    private String TAG = SynchronizeListView.class.getSimpleName();
+    private static final String TAG = SynchronizeListView.class.getSimpleName();
     private List<SynchronizeListView> mSynchronizeListViews;
     public boolean isSynchronizeScroll = false;
+
     public SynchronizeListView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init();
     }
 
     public SynchronizeListView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
+       this(context,attrs,0);
     }
 
     public SynchronizeListView(Context context) {
-        super(context);
-        init();
-
+        this(context,null);
     }
 
     private void init() {
@@ -55,7 +53,7 @@ public class SynchronizeListView extends ListView implements AbsListView.OnScrol
             firstVisibleTop = view.getChildAt(0).getTop();
         }
 
-        for(SynchronizeListView synchronizeListView:mSynchronizeListViews){
+        for(SynchronizeListView synchronizeListView : mSynchronizeListViews){
             if(synchronizeListView != view)
                 synchronizeListView.setSelectionFromTop(firstVisibleItem, firstVisibleTop);
         }

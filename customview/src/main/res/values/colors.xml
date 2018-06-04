@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--字体主色-->
+    <color name="qlColorTextmain">#2A2A2A</color>
+    <!--副文字色-->
+    <color name="qlColorSecondText">#888888</color>
+    <!--分割线-->
+    <color name="qlColorDivider">#D2D2D2</color>
+    <color name="qlColorTextGray">#535357</color>
+    <color name="qlColorTextRed">#c50f0e</color>
+    <color name="qlColorTextWhite">@android:color/white</color>
+    <color name="holo_blue_light">@android:color/holo_blue_light</color>
+    <color name="holo_green_light">@android:color/holo_green_light</color>
+</resources>

@@ -45,10 +45,7 @@ public class HVListView extends ListView {
 
     private int m_ScrollWidth;
     float down_x = 0, down_y = 0;
-    private boolean isVerticalScroll = false;
     private boolean isHorizontalScroll = false;
-    // Scroll
-    private final int SCROLL_MIN_DISTANCE = 25;    // Unit:pixel/s
 
     // Fling
     private final int FLING_MIN_DISTANCE = 50;    // Unit:pixel/s
@@ -57,18 +54,17 @@ public class HVListView extends ListView {
     private final float FLING_VELOCITY_UP_CRITICAL = -3000.0f;        // Unit:pixel/s
     private final float FLING_VELOCITY_DOWN_CRITICAL = 3000.0f;    // Unit:pixel/s
 
-    private final float VELOCITY_FACTOR = 1.05f;
     private float mVx = 0.0f, mVx_last = 0.0f;
-    private MotionEvent me1, me2;    // record the motion event in the fling function
     private FlingThread flingThread;
     private boolean mInterrupted = false;
 
     private long mStartTime;
     private float mDeceleration;
-    private int ll_group;
 
-    Handler mHandler;
+    private Handler mHandler;
     private OnHVScrollListener mOnHVScrollListener;
+
+    private int touchSlop;
 
     /**
      * 构造函数
@@ -82,6 +78,8 @@ public class HVListView extends ListView {
                 * ppi                           // pixels per inch
                 * ViewConfiguration.getScrollFriction();
         initHandler();
+
+        touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
     }
 
     /**
@@ -99,23 +97,14 @@ public class HVListView extends ListView {
             case MotionEvent.ACTION_MOVE:
                 float move_x = ev.getX() - down_x;
                 float move_y = ev.getY() - down_y;
-//                down_x = ev.getX();
-//                down_y = ev.getY();
-                if(Math.abs(move_y) > 25 && Math.abs(move_y) >= Math.abs(move_x)){
-                    if (!isHorizontalScroll) {
-                        isVerticalScroll = true;
-                    }
-                }else if(Math.abs(move_x) > 25 && Math.abs(move_y) <= Math.abs(move_x)){
-                    if (!isVerticalScroll) {
-                        isHorizontalScroll = true;
-                    }
+               if(Math.abs(move_x) > touchSlop && Math.abs(move_y) <= Math.abs(move_x)){
+                   isHorizontalScroll = true;
                 }
 
                 if (isHorizontalScroll)
                     return true;
                 break;
             case MotionEvent.ACTION_UP:
-                isVerticalScroll = false;
                 isHorizontalScroll = false;
                 break;
         }
@@ -180,7 +169,7 @@ public class HVListView extends ListView {
                 else if (mVx < FLING_VELOCITY_UP_CRITICAL)
                     mVx = FLING_VELOCITY_UP_CRITICAL;
 
-                if (flingThread == null && !isVerticalScroll && isHorizontalScroll) {
+                if (flingThread == null && isHorizontalScroll) {
                     mVx_last = 0;
                     flingThread = new FlingThread();
                     flingThread.start();
@@ -194,7 +183,7 @@ public class HVListView extends ListView {
         public boolean onScroll(MotionEvent e1, MotionEvent e2,
                                 float distanceX, float distanceY) {
             float distance_x = Math.abs(e2.getX() - e1.getX());
-            if (distance_x > 25 && !isVerticalScroll && isHorizontalScroll) {
+            if (distance_x > touchSlop  && isHorizontalScroll) {
                 procGestureMove((int) distanceX);
             }
             return true;
@@ -229,13 +218,13 @@ public class HVListView extends ListView {
 
             View itmeView = getChildAt(0);
             if (itmeView != null) {
-                ViewGroup temp_group = (ViewGroup) (itmeView.findViewById(ll_group));
+                ViewGroup temp_group = itmeView.findViewById(R.id.ll_group);
                 int temp_child_count = temp_group.getChildCount();
                 if (temp_child_count <= 3) {
                     return;
                 }
             }
-            int moveX = (int) distanceX;
+            int moveX = distanceX;
             int curX = mListHead.getScrollX();
             int scrollWidth = m_ScrollWidth;
             int dx = moveX;
@@ -247,13 +236,7 @@ public class HVListView extends ListView {
 
             if (curX + moveX + getScreenWidth() > scrollWidth) {
                 dx = scrollWidth - getScreenWidth() - curX;
-//                L.i(TAG, "2 curX = " + curX + ", moveX = " + moveX + ", getScreenWidth() = " + getScreenWidth() + ", scrollWidth = " + scrollWidth);
-            } else {
-//                L.i(TAG, "3 curX = " + curX + ", moveX = " + moveX + ", getScreenWidth() = " + getScreenWidth() + ", scrollWidth = " + scrollWidth);
             }
-
-//			bScrolling	 = dx>10;
-//			L.i("HVList", "bScrolling = " + bScrolling);
             mode = MODE_HDRAG;
 
             mOffset += dx;
@@ -263,17 +246,14 @@ public class HVListView extends ListView {
             }
             //根据手势滚动Item视图
             for (int i = 0, j = getChildCount(); i < j; i++) {
-                View child = getChildAt(i).findViewById(ll_group);
+                View child = getChildAt(i).findViewById(R.id.ll_group);
                 if (child != null) {
                     if (child.getScrollX() != mOffset)
                         child.scrollTo(mOffset, 0);
                 }
             }
             mListHead.scrollBy(dx, 0);
-            //L.i(TAG, "dx = " + dx);
-
         }
-        //requestLayout();
     }
 
     /**
@@ -284,12 +264,12 @@ public class HVListView extends ListView {
     public int getScreenWidth() {
         if (screenWidth == 0) {
             screenWidth = getContext().getResources().getDisplayMetrics().widthPixels;
-            if (getChildAt(0) != null) {
-                //screenWidth -= ((ViewGroup) getChildAt(0)).findViewById(R.id.ll_head).getMeasuredWidth();
-                screenWidth -= 100;
-            } else if (mListHead != null) {
+            if (mListHead != null) {
                 //减去固定第一列
                 screenWidth -= mListHead.getChildAt(0).getMeasuredWidth();
+            } else if (getChildAt(0) != null) {
+                //screenWidth -= ((ViewGroup) getChildAt(0)).findViewById(R.id.ll_head).getMeasuredWidth();
+                screenWidth -= DensityUtils.dip2px(getContext(), 100);
             }
         }
         return screenWidth;
@@ -318,7 +298,7 @@ public class HVListView extends ListView {
 
     public void resetToDefaultPos() {
         for (int i = 0, j = getChildCount(); i < j; i++) {
-            View child = ((ViewGroup) getChildAt(i)).findViewById(ll_group);
+            View child = getChildAt(i).findViewById(R.id.ll_group);
             if (child != null) {
                 child.scrollTo(0, 0);
                 child.scrollBy(0, 1);
